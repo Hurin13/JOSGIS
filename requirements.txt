@@ -7,3 +7,7 @@ Flask-Dance
 psycopg2-binary
 python-dotenv
 gunicorn
+GeoAlchemy2
+geopy
+Authlib
+Werkzeug
