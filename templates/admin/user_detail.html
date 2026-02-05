@@ -1,0 +1,842 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Farmer Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary" style="margin-bottom: 20px;">
+        &laquo; Back to Dashboard
+    </a>
+
+    <h2>Farmer Details</h2>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>Personal Information</h3>
+            <a href="{{ url_for('admin.edit_petani', user_id=petani.id_pemilik) }}" class="btn btn-primary btn-sm">Edit Farmer Information</a>
+        </div>
+        <p><strong>Name:</strong> {{ petani.nama_petani }}</p>
+        <p><strong>Email:</strong> {{ petani.email_petani }}</p>
+        <p><strong>NIK:</strong> {{ petani.nik }}</p>
+        <p><strong>Address:</strong> {{ petani.alamat_petani }}</p>
+        <p><strong>Phone Number:</strong> {{ petani.no_telepon }}</p>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>🗺️ Farmer Home and Farm Map</h3>
+        <div id="map" style="height: 500px; width: 100%;"></div>
+    </div>
+
+    <div class="section-header" style="margin-top: 20px;">
+      <h2>📊 Farm Data Analysis</h2>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div class="form-group">
+        <label for="farmSelector">🌿 Select Farm for Analysis:</label>
+        <select id="farmSelector" class="form-control" onchange="updateCharts()">
+          <option value="">All Farms</option>
+        </select>
+      </div>
+      <div id="selectedFarmInfo" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; display: none;">
+        <h4 id="selectedFarmName" style="color: var(--primary-green); margin-bottom: 0.5rem;"></h4>
+        <div id="selectedFarmDetails" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.9rem;"></div>
+      </div>
+    </div>
+
+    <div class="charts-container">
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3>📈 Monthly Productivity (kg/tree)</h3>
+          <canvas id="productivityChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>🌧️ Monthly Rainfall (mm)</h3>
+          <canvas id="rainfallChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3>🌿 Plant Health Status</h3>
+          <canvas id="healthChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>🐛 Pest Attack Level</h3>
+          <canvas id="pestChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3>🔧 Maintenance Activities</h3>
+          <canvas id="maintenanceChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>🌱 Variety Distribution</h3>
+          <canvas id="varietyChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>List of Owned Farms</h3>
+        {% if lahan %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Farm Name</th>
+                    <th>Area (ha)</th>
+                    <th>Planting Year</th>
+                    <th>Cocoa Variety</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in lahan %}
+                <tr>
+                    <td>{{ l.nama_lahan }}</td>
+                    <td>{{ l.luas_lahan }}</td>
+                    <td>{{ l.tahun_tanam }}</td>
+                    <td>{{ l.varietas_kakao }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.edit_lahan_admin', id_lahan=l.id_lahan) }}" class="btn-edit-animated">
+                            <i class="fas fa-edit"></i> Edit Farm
+                        </a>
+                        <form method="POST" action="{{ url_for('admin.hapus_lahan_admin', id_lahan=l.id_lahan) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-delete" onclick="return confirm('Are you sure you want to delete this farm? All related reports will also be deleted.');">
+                                <i class="fas fa-trash-alt"></i> Delete Farm
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>This farmer has no registered farms.</p>
+        {% endif %}
+    </div>
+
+    <div class="section-header" style="margin-top: 20px;">
+      <h2>📈 Farm Report History</h2>
+    </div>
+
+    <div class="card">
+      <h3>🔍 Latest Monitoring History</h3>
+      {% if monitoring %}
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Farm Name</th>
+                <th>Monitoring Date</th>
+                <th>No. Dead Trees</th>
+                <th>Pest Type</th>
+                <th>Productivity (kg/tree)</th>
+                <th>Height (cm)</th>
+                <th>Yellowing Leaves</th>
+                <th>Stem Damage</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in monitoring %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ m.lahan.nama_lahan }}</td>
+                <td>{{ m.tanggal_monitoring.strftime('%d-%m-%Y') }}</td>
+                <td>{{ m.jumlah_pohon_mati or '-' }}</td>
+                <td>{{ m.jenis_hama or '-' }}</td>
+                <td>{{ m.produktivitas or '-' }}</td>
+                <td>{{ m.tinggi_tanaman or '-' }}</td>
+                <td>{{ 'Yes' if m.daun_menguning else 'No' }}</td>
+                <td>{{ m.kerusakan_batang or '-' }}</td>
+                <td class="action-buttons">
+                    <a href="{{ url_for('admin.edit_monitoring_admin', id_monitoring=m.id_monitoring) }}" class="btn-edit">Edit</a>
+                    <form method="POST" action="{{ url_for('admin.hapus_monitoring_admin', id_monitoring=m.id_monitoring) }}" style="display:inline;">
+                        <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this data?');">Delete</button>
+                    </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p style="text-align: center; padding: 2rem; color: #666;">No monitoring data found.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>🌿 Latest Maintenance History</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+              <tr>
+                  <th>No</th>
+                  <th>Farm Name</th>
+                  <th>Application Date</th>
+                  <th>Cocoa Pruning</th>
+                  <th>Shade Tree Pruning</th>
+                  <th>Weeding</th>
+                  <th>Fertilization</th>
+                  <th>Fertilizer Type</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% if pemeliharaan %}
+                  {% for p in pemeliharaan %}
+                      <tr>
+                          <td>{{ loop.index }}</td>
+                          <td>{{ p.lahan.nama_lahan }}</td>
+                          <td>{{ p.tanggal_aplikasi.strftime('%Y-%m-%d') if p.tanggal_aplikasi else '-' }}</td>
+                          <td>{{ 'Yes' if p.pemangkasan_kakao else 'No' }}</td>
+                          <td>{{ 'Yes' if p.pemangkasan_penaung else 'No' }}</td>
+                          <td>{{ 'Yes' if p.penyiangan_gulma else 'No' }}</td>
+                          <td>{{ 'Yes' if p.pemupukan else 'No' }}</td>
+                          <td>{{ p.jenis_pupuk or '-' }}</td>
+                          <td class="action-buttons">
+                              <a href="{{ url_for('admin.edit_pemeliharaan_admin', id_pemeliharaan=p.id_pemeliharaan) }}" class="btn-edit">Edit</a>
+                              <form method="POST" action="{{ url_for('admin.hapus_pemeliharaan_admin', id_pemeliharaan=p.id_pemeliharaan) }}" style="display:inline;">
+                                  <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this data?');">Delete</button>
+                              </form>
+                          </td>
+                      </tr>
+                  {% endfor %}
+              {% else %}
+                  <tr>
+                      <td colspan="9" style="text-align: center;">No maintenance history yet</td>
+                  </tr>
+              {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🐛 Latest Pest and Disease History</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Farm Name</th>
+              <th>Date</th>
+              <th>Pest Type</th>
+              <th>Attack Level</th>
+              <th>Affected Area (ha)</th>
+              <th>Control Performed</th>
+              <th>Pest Control Type</th>
+              <th>Pest Control Notes</th>
+              <th>Disease Control Type</th>
+              <th>Disease Control Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if hama %}
+              {% for h in hama %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ h.lahan.nama_lahan }}</td>
+                  <td>{{ h.tanggal.strftime('%d-%m-%Y') }}</td>
+                  <td>{{ h.jenis_hama or '-' }}</td>
+                  <td>{{ h.tingkat_serangan_hama or '-' }}</td>
+                  <td>{{ h.luas_terdampak or '-' }}</td>
+                  <td>{{ 'Yes' if h.pengendalian_dilakukan else 'No' }}</td>
+                  <td>{{ h.jenis_pengendalian_hama or '-' }}</td>
+                  <td>{{ h.keterangan_pengendalian_hama or '-' }}</td>
+                  <td>{{ h.jenis_pengendalian_penyakit or '-' }}</td>
+                  <td>{{ h.keterangan_pengendalian_penyakit or '-' }}</td>
+                  <td class="action-buttons">
+                      <a href="{{ url_for('admin.edit_hama_admin', id_serangan=h.id_serangan) }}" class="btn-edit">Edit</a>
+                      <form method="POST" action="{{ url_for('admin.hapus_hama_admin', id_serangan=h.id_serangan) }}" style="display:inline;">
+                        <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this data?');">Delete</button>
+                      </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="12" style="text-align: center;">No pest and disease data yet</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🌤️ Latest Environment & Weather History</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Farm Name</th>
+              <th>Date</th>
+              <th>Rainfall (mm)</th>
+              <th>Drainage</th>
+              <th>Shade</th>
+              <th>Environment Photo</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if lingkungan %}
+              {% for l in lingkungan %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ l.lahan.nama_lahan }}</td>
+                  <td>{{ l.tanggal.strftime('%d-%m-%Y') }}</td>
+                  <td>{{ l.curah_hujan or '-' }}</td>
+                  <td>{{ l.drainase or '-' }}</td>
+                  <td>{{ l.naungan or '-' }}</td>
+                  <td>
+                    {% if l.foto_lingkungan %}
+                      <a href="#" onclick="showImageModal('{{ url_for('static',filename='/uploads/lingkungan/'+l.foto_lingkungan)}}')">View Photo</a>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td class="action-buttons">
+                    <a href="{{ url_for('admin.edit_lingkungan_admin', id_lingkungan_cuaca=l.id_lingkungan_cuaca)}}" class="btn-edit">Edit</a>
+                    <form method="POST" action="{{ url_for('admin.hapus_lingkungan_admin', id_lingkungan=l.id_lingkungan_cuaca) }}" style="display:inline;">
+                        <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this data?');">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="10" style="text-align: center;">No environment & weather data found</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>⚠️ Latest Field Problems</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Farm Name</th>
+              <th>Date</th>
+              <th>Problem Description</th>
+              <th>Action Taken</th>
+              <th>Additional Notes</th>
+              <th>Field Photo</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if permasalahan %}
+              {% for p in permasalahan %}
+                <tr>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ p.lahan.nama_lahan }}</td>
+                  <td>{{ p.tanggal.strftime('%d-%m-%Y') }}</td>
+                  <td>{{ p.deskripsi or '-' }}</td>
+                  <td>{{ p.tindakan_penanganan or '-' }}</td>
+                  <td>{{ p.catatan_tambahan or '-' }}</td>
+                  <td>
+                    {% if p.foto_lapangan %}
+                      <a href="#" onclick="showImageModal('{{ url_for('static',filename='/uploads/permasalahan/'+p.foto_lapangan) }}')">View Photo</a>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td class="action-buttons">
+                      <a href="{{ url_for('admin.edit_permasalahan_admin', id_permasalahan_lapang=p.id_permasalahan_lapang) }}" class="btn-edit">Edit</a>
+                      <form method="POST" action="{{ url_for('admin.hapus_permasalahan_admin', id_permasalahan=p.id_permasalahan_lapang) }}" style="display:inline;">
+                          <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this data?');">Delete</button>
+                      </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="10" style="text-align: center;">No field problems found</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; text-align: right;">
+        <form method="POST" action="{{ url_for('admin.hapus_petani', user_id=petani.id_pemilik) }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger btn-delete" onclick="return confirm('Are you sure you want to delete this farmer?');">
+                <i class="fas fa-trash-alt"></i> Delete Farmer
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="imageModal" class="modal">
+    <span class="close-button">&times;</span>
+    <img class="modal-content" id="modalImage">
+    <div id="caption"></div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+/* Add chart styling */
+.charts-container {
+    margin-bottom: 2rem;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--secondary-green);
+}
+
+.chart-card h3 {
+    color: var(--primary-green);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.chart-card canvas {
+    max-height: 300px;
+}
+
+@media (max-width: 768px) {
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+}
+.action-buttons a, .action-buttons button {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.9em;
+    border-radius: 4px;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    color: white;
+    margin-right: 5px;
+}
+.action-buttons .btn-edit { background-color: #007bff; }
+.action-buttons .btn-delete { background-color: #dc3545; }
+
+/* ✅ CSS untuk Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+    animation-name: zoom;
+    animation-duration: 0.6s;
+}
+
+@keyframes zoom {
+    from {transform:scale(0)}
+    to {transform:scale(1)}
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Get farmer ID from Flask and store it in a JavaScript variable
+    const userIdForAPI = {{ petani.id_pemilik }};
+    let chartInstances = {};
+    let farmData = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeCharts();
+        initializeMap();
+
+        // Close modal when clicking outside the image
+        const modal = document.getElementById('imageModal');
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+
+    function initializeCharts() {
+        console.log("[v0] Initializing charts for user ID:", userIdForAPI);
+        fetch(`/admin/api/chart-data?user_id=${userIdForAPI}`)
+            .then(response => {
+                console.log("[v0] Initial API response status:", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("[v0] Initial API data received:", data);
+                farmData = data.farm_info || [];
+                populateFarmSelector();
+
+                createProductivityChart(data.productivity);
+                createRainfallChart(data.rainfall);
+                createHealthChart(data.health);
+                createPestChart(data.pest);
+                createMaintenanceChart(data.maintenance);
+                createVarietyChart(data.variety);
+
+                updateSelectedFarmInfo(data.selected_farm);
+            })
+            .catch(error => {
+                console.error('[v0] Error loading initial chart data:', error);
+            });
+    }
+
+    function populateFarmSelector() {
+        const selector = document.getElementById('farmSelector');
+        selector.innerHTML = '<option value="">All Farms</option>';
+
+        console.log("[v0] Populating farm selector with data:", farmData);
+        farmData.forEach(farm => {
+            const option = document.createElement('option');
+            option.value = farm.id_lahan;
+            option.textContent = `${farm.nama_lahan} (${farm.luas_lahan} ha - ${farm.varietas_kakao})`;
+            selector.appendChild(option);
+        });
+    }
+
+    function updateCharts() {
+        const selectedFarmId = document.getElementById('farmSelector').value;
+        // ✅ PERBAIKAN: Ubah URL ke endpoint admin
+        console.log("[v0] Updating charts for farm ID:", selectedFarmId);
+
+        const url = selectedFarmId
+            ? `/admin/api/chart-data?user_id=${userIdForAPI}&farm_id=${selectedFarmId}`
+            : `/admin/api/chart-data?user_id=${userIdForAPI}`;
+
+        console.log("[v0] Fetching data from URL:", url);
+
+        fetch(url)
+            .then(response => {
+                console.log("[v0] Update API response status:", response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log("[v0] Update API data received:", data);
+
+                console.log("[v0] Destroying existing charts");
+                Object.values(chartInstances).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                chartInstances = {};
+
+                console.log("[v0] Creating new charts with updated data");
+                createProductivityChart(data.productivity);
+                createRainfallChart(data.rainfall);
+                createHealthChart(data.health);
+                createPestChart(data.pest);
+                createMaintenanceChart(data.maintenance);
+                createVarietyChart(data.variety);
+
+                updateSelectedFarmInfo(data.selected_farm);
+            })
+            .catch(error => {
+                console.error('[v0] Error updating chart data:', error);
+            });
+    }
+
+    function updateSelectedFarmInfo(selectedFarm) {
+        console.log("[v0] Updating selected farm info:", selectedFarm);
+
+        const infoDiv = document.getElementById('selectedFarmInfo');
+        const nameDiv = document.getElementById('selectedFarmName');
+        const detailsDiv = document.getElementById('selectedFarmDetails');
+
+        if (selectedFarm && selectedFarm.id_lahan) {
+            const farm = farmData.find(f => f.id_lahan === selectedFarm.id_lahan);
+            console.log("[v0] Found farm data:", farm);
+            if (farm) {
+                nameDiv.textContent = `🌿 ${farm.nama_lahan}`;
+                detailsDiv.innerHTML = `
+                    <div><strong>📏 Luas:</strong> ${farm.luas_lahan} ha</div>
+                    <div><strong>🌱 Varietas:</strong> ${farm.varietas_kakao}</div>
+                    <div><strong>📅 Tahun Tanam:</strong> ${farm.tahun_tanam || 'Tidak diketahui'}</div>
+                `;
+                infoDiv.style.display = 'block';
+            }
+        } else {
+            console.log("[v0] Showing all farms info");
+            nameDiv.textContent = '🌿 Semua Lahan';
+            detailsDiv.innerHTML = `<div><strong>📊 Menampilkan data gabungan dari ${farmData.length} lahan</strong></div>`;
+            infoDiv.style.display = 'block';
+        }
+    }
+
+    function createProductivityChart(data) {
+        const ctx = document.getElementById('productivityChart').getContext('2d');
+        chartInstances.productivity = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(item => {
+                    const date = new Date(item.month + '-01');
+                    return date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Produktivitas (kg/pohon)',
+                    data: data.map(item => item.value),
+                    borderColor: '#2d5016',
+                    backgroundColor: 'rgba(45, 80, 22, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    function createRainfallChart(data) {
+        const ctx = document.getElementById('rainfallChart').getContext('2d');
+        chartInstances.rainfall = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(item => {
+                    const date = new Date(item.month + '-01');
+                    return date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Curah Hujan (mm)',
+                    data: data.map(item => item.value),
+                    backgroundColor: '#4a7c59',
+                    borderColor: '#2d5016',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    function createHealthChart(data) {
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        chartInstances.health = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Sehat', 'Daun Menguning', 'Kerusakan Batang', 'Pohon Mati'],
+                datasets: [{
+                    data: [data.sehat, data.daun_menguning, data.kerusakan_batang, data.pohon_mati],
+                    backgroundColor: ['#8fbc8f', '#ffd700', '#d2691e', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function createPestChart(data) {
+        const ctx = document.getElementById('pestChart').getContext('2d');
+        chartInstances.pest = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.map(item => item.level || 'Tidak Diketahui'),
+                datasets: [{
+                    data: data.map(item => item.count),
+                    backgroundColor: ['#8fbc8f', '#ffd700', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function createMaintenanceChart(data) {
+        const ctx = document.getElementById('maintenanceChart').getContext('2d');
+        chartInstances.maintenance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Pemangkasan', 'Pemupukan', 'Penyiangan'],
+                datasets: [{
+                    label: 'Jumlah Aktivitas',
+                    data: [data.pemangkasan, data.pemupukan, data.penyiangan],
+                    backgroundColor: ['#2d5016', '#4a7c59', '#8fbc8f'],
+                    borderColor: ['#1a2f0c', '#2d5016', '#4a7c59'],
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    function createVarietyChart(data) {
+        const ctx = document.getElementById('varietyChart').getContext('2d');
+        chartInstances.variety = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.map(item => item.variety || 'Tidak Diketahui'),
+                datasets: [{
+                    data: data.map(item => item.area),
+                    backgroundColor: ['#2d5016', '#4a7c59', '#8fbc8f', '#d2691e', '#8b4513'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function initializeMap() {
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png'
+        });
+
+        window.map = L.map('map').setView([-8.2981, 114.1323], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(window.map);
+
+        let bounds = L.latLngBounds();
+
+        // Show farmer home marker
+        {% if petani.lokasi_rumah %}
+        const homeGeoJson = {{ petani.lokasi_rumah | tojson }};
+        if (homeGeoJson && typeof homeGeoJson === 'string') {
+            try {
+                const parsedGeoJson = JSON.parse(homeGeoJson);
+                if (parsedGeoJson && parsedGeoJson.coordinates) {
+                    const homeIcon = L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        shadowSize: [41, 41]
+                    });
+                    const [lng, lat] = parsedGeoJson.coordinates;
+                    L.marker([lat, lng], { icon: homeIcon }).addTo(window.map).bindPopup("Farmer's Home: {{ petani.nama_petani }}");
+                    bounds.extend([lat, lng]);
+                }
+            } catch (e) {
+                console.error("Failed to parse GeoJSON for home location:", e);
+            }
+        }
+        {% endif %}
+
+        // 🌿 Menampilkan semua lahan petani
+        {% if lahan %}
+        const lahanData = {{ lahan | tojson }};
+        lahanData.forEach(lahan => {
+            if (lahan.geojson_lokasi) {
+                try {
+                    const parsedGeoJson = JSON.parse(lahan.geojson_lokasi);
+                    if (parsedGeoJson.type === 'Polygon' && parsedGeoJson.coordinates) {
+                        const latlngs = parsedGeoJson.coordinates[0].map(coord => [coord[1], coord[0]]);
+                        const polygon = L.polygon(latlngs, {
+                            color: '#2d5016',
+                            weight: 3,
+                            fillOpacity: 0.4,
+                            fillColor: '#8fbc8f'
+                        }).addTo(window.map);
+                        polygon.bindPopup(`<b>${lahan.nama_lahan}</b><br>Luas: ${lahan.luas_lahan} ha`);
+                        bounds.extend(polygon.getBounds());
+                    }
+                } catch (e) {
+                    console.error("Gagal mem-parse GeoJSON untuk lahan:", e);
+                }
+            }
+        });
+        {% endif %}
+
+        // Menyesuaikan view peta untuk mencakup semua marker dan poligon
+        if (bounds.isValid()) {
+            window.map.fitBounds(bounds);
+        }
+
+        let currentLayer = null;
+
+        window.showOnMap = function (geojson, namaLahan) {
+            if (!geojson) {
+                alert("GeoJSON data is not available.");
+                return;
+            }
+
+            if (currentLayer) {
+                window.map.removeLayer(currentLayer);
+            }
+
+            if (geojson.type === 'Point') {
+                const [lng, lat] = geojson.coordinates;
+                currentLayer = L.marker([lat, lng]).addTo(window.map).bindPopup(namaLahan).openPopup();
+                window.map.setView([lat, lng], 15);
+            } else if (geojson.type === 'Polygon') {
+                const latlngs = geojson.coordinates[0].map(coord => [coord[1], coord[0]]);
+                currentLayer = L.polygon(latlngs, {
+                    color: '#2d5016',
+                    weight: 3,
+                    fillOpacity: 0.4,
+                    fillColor: '#8fbc8f'
+                }).addTo(window.map).bindPopup(namaLahan).openPopup();
+                window.map.fitBounds(currentLayer.getBounds());
+            } else {
+                alert("Geometry type not recognized.");
+            }
+        };
+    }
+
+    // Image modal function
+    function showImageModal(imageSrc) {
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        modal.style.display = "block";
+        modalImg.src = imageSrc;
+    }
+</script>
+{% endblock %}

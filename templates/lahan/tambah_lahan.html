@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Add Farm{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>➕ Add New Farm</h2>
+  <p>Register your orange plantation land</p>
+</div>
+
+<div class="form-container">
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>🌿 Farm Name</label>
+        <input type="text" name="nama_lahan" placeholder="Example: North Orange Orchard" required>
+      </div>
+
+      <div class="form-group">
+        <label>📏 Area (ha)</label>
+        <input type="number" step="0.01" name="luas_lahan" id="luas_lahan" placeholder="Automatically filled from map" readonly required>
+      </div>
+
+      <div class="form-group">
+        <label>📅 Planting Year</label>
+        <input type="number" name="tahun_tanam" placeholder="Example: 2020" required>
+      </div>
+
+      <div class="form-group">
+        <label>🌱 Orange Variety</label>
+        <select name="varietas" required>
+          <option value="" disabled selected>Select Orange Variety</option>
+          <option value="Jeruk Semboro">Jeruk Semboro</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label>📄 Upload Certificate (optional)</label>
+        <input type="file" name="bukti" accept="image/*">
+        <small style="color: #666; font-size: 0.9rem;">Format: JPG, PNG, PDF (Max 5MB)</small>
+      </div>
+    </div>
+
+    <input type="hidden" name="titik_ordinat" id="titik_ordinat" required>
+
+    <div class="card">
+      <h3>🗺️ Draw Farm Boundary</h3>
+      <p style="color: #666; margin-bottom: 1rem;">Use the polygon tool to draw your farm boundary on the map</p>
+      <div id="map"></div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">💾 Save Farm</button>
+      <a href="{{ url_for('lahan.kelola_lahan') }}" class="btn btn-secondary">← Back</a>
+    </div>
+  </form>
+</div>
+
+<!-- Leaflet Map & Geometry -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/leaflet-geometryutil"></script>
+
+<script>
+    var map = L.map('map').setView([-8.2981, 114.1323], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    var drawControl = new L.Control.Draw({
+        draw: {
+            polygon: { allowIntersection: false, showArea: true },
+            marker: false, polyline: false, circle: false,
+            rectangle: false, circlemarker: false
+        },
+        edit: { featureGroup: drawnItems }
+    });
+    map.addControl(drawControl);
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+        var layer = e.layer;
+        drawnItems.clearLayers();
+        drawnItems.addLayer(layer);
+
+        var geojson = JSON.stringify(layer.toGeoJSON().geometry);
+        document.getElementById('titik_ordinat').value = geojson;
+
+        var area_m2 = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+        var area_ha = area_m2 / 10000;
+        document.getElementById('luas_lahan').value = area_ha.toFixed(2);
+    });
+</script>
+{% endblock %}

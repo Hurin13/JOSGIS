@@ -1,0 +1,117 @@
+{% extends 'base_admin.html' %}
+{% block title %}Edit Farm{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>✏️ Edit Farm Data</h2>
+  <p>Update farm information</p>
+</div>
+
+<div class="form-container">
+  <form method="POST">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>🌿 Farm Name</label>
+        <input type="text" name="nama_lahan" value="{{ lahan.nama_lahan }}" required>
+      </div>
+
+      <div class="form-group">
+        <label>📅 Planting Year</label>
+        <input type="number" name="tahun_tanam" value="{{ lahan.tahun_tanam }}" required>
+      </div>
+
+      <div class="form-group">
+        <label>🌱 Orange Variety</label>
+        <select name="varietas" required>
+          <option value="Jeruk Semboro" {% if lahan.varietas_kakao == 'Jeruk Semboro' %}selected{% endif %}>Jeruk Semboro</option>
+        </select>
+      </div>
+    </div>
+
+    <input type="hidden" name="titik_ordinat" id="titik_ordinat" required>
+
+    <div class="card">
+      <h3>🗺️ Edit Farm Boundary</h3>
+      <p style="color: #666; margin-bottom: 1rem;">Use the edit tool to modify the farm boundary or redraw with the polygon tool</p>
+      <div id="map"></div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+      <a href="{{ url_for('admin.user_detail', user_id=lahan.id_pemilik) }}" class="btn btn-secondary">← Back</a>
+    </div>
+  </form>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/leaflet-geometryutil@0.9.3/src/leaflet.geometryutil.js"></script>
+
+<style>
+  #map {
+    height: 400px;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+</style>
+
+<script>
+    const existingGeoJSON = {{ lahan.titik_ordinat | safe }};
+    const map = L.map('map').setView([-8.2981, 114.1323], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    // Fix logic: add polygon only if valid
+    if (existingGeoJSON && existingGeoJSON.type === 'Polygon') {
+        const polygonLayer = L.geoJSON(existingGeoJSON, {
+            style: {
+                color: '#2d5016',
+                weight: 3,
+                fillOpacity: 0.5,
+                fillColor: '#8fbc8f'
+            }
+        });
+
+        // ✅ Pastikan polygonLayer memiliki layer sebelum menambahkannya
+        if (polygonLayer.getLayers().length > 0) {
+            polygonLayer.addTo(drawnItems);
+            map.fitBounds(polygonLayer.getBounds());
+
+            // Atur nilai input hidden saat halaman dimuat
+            document.getElementById('titik_ordinat').value = JSON.stringify(existingGeoJSON);
+        }
+    }
+
+    const drawControl = new L.Control.Draw({
+        draw: {
+            polygon: true,
+            polyline: false,
+            rectangle: false,
+            circle: false,
+            marker: false,
+            circlemarker: false
+        },
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+    map.addControl(drawControl);
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+        drawnItems.clearLayers();
+        drawnItems.addLayer(e.layer);
+        document.getElementById('titik_ordinat').value = JSON.stringify(e.layer.toGeoJSON().geometry);
+    });
+
+    map.on('draw:edited', function (e) {
+        e.layers.eachLayer(function (layer) {
+            document.getElementById('titik_ordinat').value = JSON.stringify(layer.toGeoJSON().geometry);
+        });
+    });
+</script>
+{% endblock %}

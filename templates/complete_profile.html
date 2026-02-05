@@ -1,0 +1,164 @@
+{% extends "base_login.html" %}
+
+{% block title %}Complete Profile - JOSGIS Jeruk Semboro{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+<div class="form-container">
+    <div class="form-header">
+        <h2>Complete Your Profile</h2>
+        <p>To continue, please complete your profile information as a citrus farmer</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.complete_profile') }}" id="profileForm">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="nik">🆔 National ID (NIK)</label>
+                <input type="text" id="nik" name="nik" placeholder="16-digit National ID" maxlength="16" required>
+                <small>Enter your 16-digit National Identification Number</small>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">🚻 Gender</label>
+                <select id="gender" name="gender" required>
+                    <option value="">Select gender</option>
+                    <option value="Laki-laki">Male</option>
+                    <option value="Perempuan">Female</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="no_telepon">📞 Phone Number</label>
+                <input type="tel" id="no_telepon" name="no_telepon" placeholder="08xxxxxxxxxx" required>
+                <small>Example: 081234567890</small>
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔒 Password (Optional)</label>
+                <input type="password" id="password" name="password" placeholder="Enter a password if you want to login without Google">
+                <small>Leave blank if you will only sign in with Google</small>
+            </div>
+
+            <div class="form-group">
+                <label for="titik_lat">📍 Latitude</label>
+                <input type="text" id="titik_lat" name="titik_lat" placeholder="Klik peta untuk mengisi" readonly required>
+            </div>
+
+            <div class="form-group">
+                <label for="titik_lng">📍 Longitude</label>
+                <input type="text" id="titik_lng" name="titik_lng" placeholder="Klik peta untuk mengisi" readonly required>
+            </div>
+
+            <div class="form-group full-width">
+                <label for="alamat">🏠 Address</label>
+                <textarea id="alamat" name="alamat" rows="4" placeholder="Address will be filled from the map; you can edit if needed" required></textarea>
+                <small>Address is filled automatically from the map but can be edited if needed.</small>
+            </div>
+
+            <div class="form-group full-width">
+                <div class="section-header">
+                    <h3>🗺️ Select Your Home Location</h3>
+                    <p>Click on the map to set your home location</p>
+                </div>
+                <div id="map" style="height: 400px; width: 100%; border-radius: 8px; border: 2px solid #ddd; position: relative; z-index: 1;"></div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" class="btn btn-primary">
+                <span>💾 Save Profile</span>
+            </button>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary">
+                <span>🚪 Cancel & Logout</span>
+            </a>
+        </div>
+    </form>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var map = L.map('map').setView([-8.2981, 114.1323], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 100);
+
+        var marker;
+
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            document.getElementById('titik_lat').value = lat;
+            document.getElementById('titik_lng').value = lng;
+
+            if (marker) {
+                map.removeLayer(marker);
+            }
+
+            marker = L.marker([lat, lng]).addTo(map);
+
+            fetch('/reverse_geocode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lat: lat,
+                    lon: lng
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('alamat').value = data.alamat;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }, 100);
+
+    document.getElementById('nik').addEventListener('input', function(e) {
+        var value = e.target.value.replace(/\D/g, '');
+        e.target.value = value;
+
+        if (value.length !== 16 && value.length > 0) {
+            e.target.setCustomValidity('NIK must consist of 16 digits');
+        } else {
+            e.target.setCustomValidity('');
+        }
+    });
+
+    document.getElementById('no_telepon').addEventListener('input', function(e) {
+        var value = e.target.value.replace(/\D/g, '');
+        e.target.value = value;
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        var nik = document.getElementById('nik').value;
+        var lat = document.getElementById('titik_lat').value;
+        var lng = document.getElementById('titik_lng').value;
+
+        if (nik.length !== 16) {
+            alert('NIK must consist of 16 digits');
+            e.preventDefault();
+            return;
+        }
+
+        if (!lat || !lng) {
+            alert('Please select your home location on the map');
+            e.preventDefault();
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Edit Environment & Weather Data{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary" style="margin-bottom: 20px;">
+        &laquo; Back to Farmer Details
+    </a>
+
+    <h2>Edit Environment & Weather Data</h2>
+
+    <div class="card">
+        <h3>Edit Environment - {{ data.lahan.nama_lahan }}</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label for="tanggal">Date:</label>
+                <input type="date" id="tanggal" name="tanggal" class="form-control" value="{{ data.tanggal.strftime('%Y-%m-%d') if data.tanggal else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="curah_hujan">Rainfall (mm):</label>
+                <input type="number" step="0.01" id="curah_hujan" name="curah_hujan" class="form-control" value="{{ data.curah_hujan or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="drainase">Drainage:</label>
+                <select id="drainase" name="drainase" class="form-control">
+                    <option value="">Select Drainage</option>
+                    <option value="baik" {{ 'selected' if data.drainase == 'baik' }}>Good</option>
+                    <option value="sedang" {{ 'selected' if data.drainase == 'sedang' }}>Moderate</option>
+                    <option value="buruk" {{ 'selected' if data.drainase == 'buruk' }}>Poor</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="naungan">Shade:</label>
+                <select id="naungan" name="naungan" class="form-control">
+                    <option value="">Select Shade Condition</option>
+                    <option value="terlalu banyak" {{ 'selected' if data.naungan == 'terlalu banyak' }}>Too Much</option>
+                    <option value="cukup" {{ 'selected' if data.naungan == 'cukup' }}>Enough</option>
+                    <option value="kurang" {{ 'selected' if data.naungan == 'kurang' }}>Less</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

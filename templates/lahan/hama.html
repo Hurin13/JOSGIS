@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Pests & Diseases{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>🐛 Pests &amp; Diseases for: {{ lahan.komoditas }}</h2>
+  <!-- Ubah dari "tanaman kakao" menjadi "tanaman jeruk" -->
+  <p>Manage pest and disease attack data for orange plants</p>
+</div>
+
+<div class="btn-group" style="margin-bottom: 2rem;">
+  <a href="{{ url_for('lahan.detail_lahan', id_lahan=lahan.id_lahan) }}" class="btn btn-secondary">← Back to Field Details</a>
+</div>
+
+<div class="form-container">
+  <form method="POST" action="{{ url_for('hama.tambah_hama', id_lahan=lahan.id_lahan) }}">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📅 Date:</label>
+        <input type="date" name="tanggal" required>
+      </div>
+
+      <div class="form-group">
+        <label>🐛 Pest Type:</label>
+        <!-- Ubah contoh dari "Penggerek buah kakao" menjadi "Penggerek buah jeruk" -->
+        <input type="text" name="jenis_hama" placeholder="Example: Citrus fruit borer">
+      </div>
+
+      <div class="form-group">
+        <label>📊 Pest Attack Severity:</label>
+        <select name="tingkat_serangan_hama">
+          <option value="rendah">Low</option>
+          <option value="sedang">Moderate</option>
+          <option value="tinggi">High</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>📏 Affected Area (m²):</label>
+        <input type="number" step="0.01" name="luas_terdampak" placeholder="Area affected">
+      </div>
+
+      <div class="form-group">
+        <label>🛡️ Control Applied:</label>
+        <select name="pengendalian_dilakukan">
+          <option value="ya">Yes</option>
+          <option value="tidak">No</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🛡️ Pest Control Type</h3>
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_hama" value="mekanis" id="hama_mekanis">
+          <label for="hama_mekanis">Mechanical</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_hama" value="kimia" id="hama_kimia">
+          <label for="hama_kimia">Chemical</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_hama" value="hayati" id="hama_hayati">
+          <label for="hama_hayati">Biological</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_hama" value="lainnya" id="hama_lainnya">
+          <label for="hama_lainnya">Other</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>📝 Pest Control Notes:</label>
+        <input type="text" name="keterangan_pengendalian_hama" placeholder="Describe the control method used">
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💊 Disease Control Type</h3>
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_penyakit" value="mekanis" id="penyakit_mekanis">
+          <label for="penyakit_mekanis">Mechanical</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_penyakit" value="kimia" id="penyakit_kimia">
+          <label for="penyakit_kimia">Chemical</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_penyakit" value="hayati" id="penyakit_hayati">
+          <label for="penyakit_hayati">Biological</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="radio" name="jenis_pengendalian_penyakit" value="lainnya" id="penyakit_lainnya">
+          <label for="penyakit_lainnya">Other</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>📝 Disease Control Notes:</label>
+        <input type="text" name="keterangan_pengendalian_penyakit" placeholder="Describe the control method used">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">💾 Save Pest Data</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>📋 Pest &amp; Disease History</h3>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Pest Type</th>
+          <th>Severity</th>
+          <th>Affected Area (m²)</th>
+          <th>Control Applied</th>
+          <th>Pest Control Type</th>
+          <th>Disease Control Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in data_hama %}
+        <tr>
+          <td>{{ h.id_serangan }}</td>
+          <td>{{ h.tanggal.strftime('%d/%m/%Y') if h.tanggal else '' }}</td>
+          <td>{{ h.jenis_hama }}</td>
+          <td>{{ h.tingkat_serangan_hama }}</td>
+          <td>{{ h.luas_terdampak }}</td>
+          <td>{{ 'Yes' if h.pengendalian_dilakukan else 'No' }}</td>
+          <td>{{ h.jenis_pengendalian_hama }} {{ h.keterangan_pengendalian_hama }}</td>
+          <td>{{ h.jenis_pengendalian_penyakit }} {{ h.keterangan_pengendalian_penyakit }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align: center;">No data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

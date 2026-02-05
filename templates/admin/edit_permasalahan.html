@@ -1,0 +1,52 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Edit Field Problem Data{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary" style="margin-bottom: 20px;">
+        &laquo; Back to Farmer Details
+    </a>
+
+    <h2>Edit Field Problem Data</h2>
+
+    <div class="card">
+        <h3>Edit Problem - {{ data.lahan.nama_lahan }}</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label for="tanggal">Date:</label>
+                <input type="date" id="tanggal" name="tanggal" class="form-control" value="{{ data.tanggal.strftime('%Y-%m-%d') if data.tanggal else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="deskripsi">Problem Description:</label>
+                <textarea id="deskripsi" name="deskripsi" class="form-control" rows="4">{{ data.deskripsi or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="tindakan_penanganan">Action Taken:</label>
+                <textarea id="tindakan_penanganan" name="tindakan_penanganan" class="form-control" rows="4">{{ data.tindakan_penanganan or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="catatan_tambahan">Additional Notes:</label>
+                <textarea id="catatan_tambahan" name="catatan_tambahan" class="form-control" rows="3">{{ data.catatan_tambahan or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Current Field Photo:</label>
+                {% if data.foto_lapangan %}
+                    <p><a href="{{ url_for('static', filename='uploads/permasalahan/' + data.foto_lapangan) }}" target="_blank">View Photo</a></p>
+                {% else %}
+                    <p>No photo uploaded.</p>
+                {% endif %}
+                </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

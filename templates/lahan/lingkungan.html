@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Environment & Weather{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>🌤️ Environment &amp; Weather at: {{ lahan.komoditas }}</h2>
+  <!-- Ubah dari "tanaman kakao" menjadi "tanaman jeruk" -->
+  <p>Monitor environmental and weather conditions for orange plants</p>
+</div>
+
+<div class="btn-group" style="margin-bottom: 2rem;">
+  <a href="{{ url_for('lahan.detail_lahan', id_lahan=lahan.id_lahan) }}" class="btn btn-secondary">← Back to Field Details</a>
+</div>
+
+<div class="form-container">
+  <form method="POST" action="{{ url_for('lingkungan.tambah_lingkungan', id_lahan=lahan.id_lahan) }}" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📅 Date:</label>
+        <input type="date" name="tanggal" required>
+      </div>
+
+      <div class="form-group">
+        <label>🌧️ Rainfall (mm):</label>
+        <input type="number" step="0.01" name="curah_hujan" placeholder="Enter rainfall in mm">
+      </div>
+
+      <div class="form-group">
+        <label>💧 Field Drainage Condition:</label>
+        <select name="drainase">
+          <option value="baik">Good</option>
+          <option value="sedang">Moderate</option>
+          <option value="buruk">Poor</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>🌳 Shade:</label>
+        <select name="naungan">
+          <option value="terlalu banyak">Too Much</option>
+          <option value="cukup">Enough</option>
+          <option value="kurang">Insufficient</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label>📸 Field Photo:</label>
+        <input type="file" name="foto_lingkungan" accept="image/*">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">💾 Save Environment Data</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>📋 Environment &amp; Weather History</h3>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Rainfall (mm)</th>
+          <th>Drainage</th>
+          <th>Shade</th>
+          <th>Photo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in data_lingkungan %}
+        <tr>
+          <td>{{ l.id_lingkungan_cuaca }}</td>
+          <td>{{ l.tanggal.strftime('%d/%m/%Y') if l.tanggal else '' }}</td>
+          <td>{{ l.curah_hujan }}</td>
+          <td>{{ l.drainase }}</td>
+          <td>{{ l.naungan }}</td>
+          <td>
+            {% if l.foto_lingkungan %}
+              <img src="{{ url_for('static', filename='uploads/' ~ l.foto_lingkungan) }}" alt="Foto" style="width: 100px; height: 60px; object-fit: cover; border-radius: 6px;">
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align: center;">No data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

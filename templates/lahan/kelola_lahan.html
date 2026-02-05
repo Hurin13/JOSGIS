@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Manage Farms{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>🌱 Manage Farms</h2>
+  <p>Manage your orange plantation land data</p>
+</div>
+
+<div class="btn-group" style="margin-bottom: 2rem;">
+  <a href="{{ url_for('lahan.tambah_lahan') }}" class="btn btn-primary">
+    ➕ Add New Farm
+  </a>
+  <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
+    ← Back to Dashboard
+  </a>
+</div>
+
+<div class="card">
+  <h3>📊 Your Farm List</h3>
+
+  {% if daftar_lahan %}
+    <ul class="lahan-list">
+      {% for lahan in daftar_lahan %}
+        <li class="lahan-item">
+          <h4>🌿 {{ lahan.nama_lahan }}</h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>📏 Area:</label>
+              <span>{{ lahan.luas_lahan | round(2) }} ha</span>
+            </div>
+            <div class="form-group">
+              <label>📅 Planting Year:</label>
+              <span>{{ lahan.tahun_tanam }}</span>
+            </div>
+            <div class="form-group">
+              <label>🌱 Orange Variety:</label>
+              <span>{{ lahan.varietas_kakao }}</span>
+            </div>
+          </div>
+
+          {% if lahan.bukti_luas_sertifikat %}
+            <p style="margin: 1rem 0;">
+              <a href="{{ url_for('static', filename='uploads/sertifikat/' + lahan.bukti_luas_sertifikat.replace('\\', '/').split('/')[-1]) }}" target="_blank" style="color: var(--cocoa-brown); font-weight: 600;">
+                📄 View Certificate
+              </a>
+            </p>
+          {% endif %}
+
+          <div class="lahan-actions">
+            <a href="{{ url_for('lahan.detail_lahan', id_lahan=lahan.id_lahan) }}">📄 Farm Details</a>
+            <a href="{{ url_for('lahan.edit_lahan', id_lahan=lahan.id_lahan) }}">✏️ Edit</a>
+            <a href="{{ url_for('lahan.hapus_lahan', id_lahan=lahan.id_lahan) }}" onclick="return confirm('Are you sure you want to delete this farm?')" style="background: #dc3545;">🗑️ Delete</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div style="text-align: center; padding: 3rem; color: #666;">
+      <h4>🌱 No Farms Yet</h4>
+      <p>Please add a farm first to start recording your orange plantation.</p>
+      <a href="{{ url_for('lahan.tambah_lahan') }}" class="btn btn-primary" style="margin-top: 1rem;">
+        ➕ Add First Farm
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

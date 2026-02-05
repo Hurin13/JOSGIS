@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Field Monitoring{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>🔍 Field Monitoring Form ID: {{ id_lahan }}</h2>
+  <!-- Ubah dari "tanaman kakao" menjadi "tanaman jeruk" -->
+  <p>Monitor the condition and development of orange plants</p>
+</div>
+
+<div class="form-container">
+  <form action="{{ url_for('monitoring.tambah_monitoring', id_lahan=id_lahan) }}" method="POST" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="tanggal_monitoring">📅 Monitoring Date:</label>
+        <input type="date" name="tanggal_monitoring" required>
+      </div>
+
+      <div class="form-group">
+        <label for="jumlah_pohon_mati">💀 Number of Dead Trees:</label>
+        <input type="number" name="jumlah_pohon_mati" min="0" placeholder="Enter number of dead trees">
+      </div>
+
+      <div class="form-group">
+        <label for="jenis_hama">🐛 Pest Type:</label>
+        <!-- Ubah contoh dari "Penggerek buah kakao" menjadi "Penggerek buah jeruk" -->
+        <input type="text" name="jenis_hama" placeholder="Example: Citrus fruit borer">
+      </div>
+
+      <div class="form-group">
+        <label for="produktivitas">⚖️ Productivity (kg):</label>
+        <input type="number" name="produktivitas" step="0.01" placeholder="Harvest yield in kg">
+      </div>
+
+      <div class="form-group">
+        <label for="tinggi_tanaman">📏 Plant Height (cm):</label>
+        <input type="number" name="tinggi_tanaman" step="0.01" placeholder="Average plant height">
+      </div>
+
+      <div class="form-group">
+        <label for="daun_menguning">🍃 Yellowing Leaves?</label>
+        <select name="daun_menguning">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="kerusakan_batang">🌳 Stem Damage:</label>
+        <input type="text" name="kerusakan_batang" placeholder="Description of stem damage">
+      </div>
+
+      <div class="form-group">
+        <label for="foto_tanaman">📸 Upload Plant Photo:</label>
+        <input type="file" name="foto_tanaman" accept="image/*">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">💾 Save Monitoring</button>
+      <a href="{{ url_for('lahan.detail_lahan', id_lahan=id_lahan) }}" class="btn btn-secondary">← Back to Field Details</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

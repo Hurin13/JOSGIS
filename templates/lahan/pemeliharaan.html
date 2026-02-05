@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Field Maintenance{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>🌿 Field Maintenance: {{ lahan.komoditas }}</h2>
+  <!-- Ubah dari "tanaman kakao" menjadi "tanaman jeruk" -->
+  <p>Manage maintenance activities for orange plants</p>
+</div>
+
+<div class="btn-group" style="margin-bottom: 2rem;">
+  <a href="{{ url_for('lahan.detail_lahan', id_lahan=lahan.id_lahan) }}" class="btn btn-secondary">← Back to Field Details</a>
+</div>
+
+<div class="form-container">
+  <form method="POST" action="{{ url_for('pemeliharaan.tambah_pemeliharaan', id_lahan=lahan.id_lahan) }}">
+    <div class="card">
+      <h3>✂️ Pruning &amp; Weeding Activities</h3>
+
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" name="pemangkasan_kakao" id="pemangkasan_kakao">
+          <!-- Ubah label dari "Pemangkasan Kakao" menjadi "Pemangkasan Jeruk" -->
+          <label for="pemangkasan_kakao">Orange Pruning</label>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <!-- Ubah label dari "Tanggal Pemangkasan Kakao" -->
+          <label>Orange Pruning Date:</label>
+          <input type="date" name="tanggal_pemangkasan_kakao">
+        </div>
+      </div>
+
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" name="pemangkasan_penaung" id="pemangkasan_penaung">
+          <label for="pemangkasan_penaung">Shade Tree Pruning</label>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label>Shade Tree Pruning Date:</label>
+          <input type="date" name="tanggal_pemangkasan_penaung">
+        </div>
+      </div>
+
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" name="penyiangan_gulma" id="penyiangan_gulma">
+          <label for="penyiangan_gulma">Weeding</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🌱 Fertilization</h3>
+
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" name="pemupukan" id="pemupukan">
+          <label for="pemupukan">Fertilization</label>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>📅 Fertilizer Application Date:</label>
+          <input type="date" name="tanggal_aplikasi">
+        </div>
+
+        <div class="form-group">
+          <label>⚖️ Dose Amount (kg):</label>
+          <input type="number" step="0.1" name="jumlah_dosis" placeholder="Enter fertilizer dose">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>🧪 Fertilizer Type:</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="radio" name="jenis_pupuk" value="NPK" id="npk">
+            <label for="npk">NPK</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="radio" name="jenis_pupuk" value="Urea" id="urea">
+            <label for="urea">Urea</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="radio" name="jenis_pupuk" value="Organik" id="organik">
+            <label for="organik">Organic</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="radio" name="jenis_pupuk" value="Lainnya" id="lainnya">
+            <label for="lainnya">Other</label>
+          </div>
+        </div>
+        <input type="text" name="jenis_pupuk_lainnya" placeholder="Specify other fertilizer type..." style="margin-top: 1rem;">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">💾 Save Maintenance</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>📋 Maintenance History</h3>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <!-- Ubah header dari "Pemangkasan Kakao" menjadi "Pemangkasan Jeruk" -->
+          <th>Orange Pruning</th>
+          <th>Shade Tree Pruning</th>
+          <th>Weeding</th>
+          <th>Fertilization</th>
+          <th>Fertilizer Type</th>
+          <th>Dose Amount (kg)</th>
+          <th>Application Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if data_pemeliharaan %}
+          {% for p in data_pemeliharaan %}
+          <tr>
+            <td>{{ p.id_pemeliharaan }}</td>
+            <td>{% if p.pemangkasan_kakao %}✔️ {{ p.tanggal_pemangkasan_kakao.strftime('%d/%m/%Y') if p.tanggal_pemangkasan_kakao else '' }}{% else %}-{% endif %}</td>
+            <td>{% if p.pemangkasan_penaung %}✔️ {{ p.tanggal_pemangkasan_penaung.strftime('%d/%m/%Y') if p.tanggal_pemangkasan_penaung else '' }}{% else %}-{% endif %}</td>
+            <td>{% if p.penyiangan_gulma %}✔️{% else %}-{% endif %}</td>
+            <td>{% if p.pemupukan %}✔️ {{ p.tanggal_aplikasi.strftime('%d/%m/%Y') if p.tanggal_aplikasi else '' }}{% else %}-{% endif %}</td>
+            <td>{{ p.jenis_pupuk }}</td>
+            <td>{{ p.jumlah_dosis }}</td>
+            <td>{{ p.tanggal_aplikasi.strftime('%d/%m/%Y') if p.tanggal_aplikasi else '-' }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="8" style="text-align: center;">No maintenance data yet.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

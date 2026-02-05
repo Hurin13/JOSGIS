@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}JOSGIS - Jeruk Semboro Geographic Information System - University of Jember{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary-orange: #e67e22;
+            --secondary-orange: #f39c12;
+            --light-orange: #f8b88b;
+            --cocoa-brown: #8b4513;
+            --light-cocoa: #d2691e;
+            --cream: #f5f5dc;
+            --gold: #ffd700;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--light-gray) 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header with logo */
+        .header {
+            background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            gap: 1.5rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .header-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            color: var(--gold);
+        }
+
+        .header-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* --- NEW STYLING FOR HAMBURGER MENU --- */
+        /* Hamburger Menu Styles */
+        .hamburger-menu {
+            position: fixed;
+            top: 50px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .hamburger-btn {
+            background: linear-gradient(135deg, var(--secondary-orange) 0%, var(--primary-orange) 100%);
+            border: none;
+            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .hamburger-btn span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 998;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -350px;
+            width: 350px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--white) 0%, var(--light-gray) 100%);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .menu-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .menu-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .menu-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .menu-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex: 1;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.2rem 2rem;
+            color: var(--primary-orange);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .menu-item:hover {
+            background: var(--light-orange);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .menu-item.active {
+            background: linear-gradient(135deg, var(--secondary-orange) 0%, var(--primary-orange) 100%);
+            color: white;
+        }
+
+        .menu-item.logout {
+            color: #dc3545;
+        }
+
+        .menu-item.logout:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .menu-icon {
+            font-size: 1.5rem;
+            width: 30px;
+            text-align: center;
+        }
+
+        .menu-text {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .menu-footer {
+            padding: 1.5rem 2rem;
+            background: var(--light-gray);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: #666;
+        }
+
+        .menu-footer p {
+            margin: 0;
+            font-weight: 600;
+            color: var(--primary-orange);
+        }
+
+        .menu-footer small {
+            font-size: 0.9rem;
+        }
+
+        /* Form styling */
+        .form-container {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-top: 4px solid var(--secondary-orange);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--primary-orange);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-orange);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Checkbox styling */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--light-gray);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .checkbox-item:hover {
+            background: var(--light-orange);
+            border-color: var(--secondary-orange);
+        }
+
+        .checkbox-item input[type="checkbox"],
+        .checkbox-item input[type="radio"] {
+            width: auto;
+            margin: 0;
+            transform: scale(1.2);
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Button styling */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-orange) 0%, var(--primary-orange) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--cocoa-brown);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: var(--light-cocoa);
+            transform: translateY(-2px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        /* Table styling */
+        .table-container {
+            background: var(--white);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background: var(--light-gray);
+        }
+
+        /* Flash messages */
+        .flash {
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .flash.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Map styling */
+        #map {
+            height: 450px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            border: 3px solid var(--secondary-orange);
+        }
+
+        /* Card styling */
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--secondary-orange);
+        }
+
+        .card h3 {
+            color: var(--primary-orange);
+            margin-bottom: 1rem;
+        }
+
+        /* Section headers */
+        .section-header {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--light-orange) 0%, var(--secondary-orange) 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+
+        /* List styling */
+        .lahan-list {
+            list-style: none;
+        }
+
+        .lahan-item {
+            background: var(--white);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--cocoa-brown);
+        }
+
+        .lahan-item h4 {
+            color: var(--primary-orange);
+            margin-bottom: 0.5rem;
+        }
+
+        .lahan-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .lahan-actions a {
+            padding: 0.5rem 1rem;
+            background: var(--secondary-orange);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .lahan-actions a:hover {
+            background: var(--primary-orange);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive menu */
+        @media (max-width: 768px) {
+            .side-menu {
+                width: 280px;
+                left: -280px;
+            }
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-orange) 0%, var(--secondary-orange) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .profile-field {
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-orange);
+        }
+
+        .profile-field label {
+            font-weight: 600;
+            color: var(--primary-orange);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-field span {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        #profileMap {
+            height: 300px;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="{{ url_for('static', filename='uploads/logo_unej.png') }}" alt="Logo UNEJ" class="logo">
+            <div class="header-text">
+                <h1>JOSGIS</h1>
+                <p>Jeruk Semboro Geographic Information System - University of Jember</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="hamburger-menu">
+        <button class="hamburger-btn" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+        <nav class="side-menu" id="sideMenu">
+            <div class="menu-header">
+                <img src="{{ url_for('static', filename='uploads/logo_unej.png') }}" alt="Logo UNEJ" class="menu-logo">
+                <h3>Main Menu</h3>
+                <button class="close-btn" onclick="closeMenu()">&times;</button>
+            </div>
+
+            <ul class="menu-items">
+                <li>
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="menu-item active">
+                        <span class="menu-icon">🏠</span>
+                        <span class="menu-text">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="menu-item" onclick="showProfile(); return false;">
+                        <span class="menu-icon">👤</span>
+                        <span class="menu-text">Farmer Profile</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('lahan.kelola_lahan') }}" class="menu-item">
+                        <span class="menu-icon">🌱</span>
+                        <span class="menu-text">Manage Fields</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('auth.logout') }}" class="menu-item logout" onclick="return confirm('Are you sure you want to logout?')">
+                        <span class="menu-icon">🚪</span>
+                        <span class="menu-text">Logout</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="menu-footer">
+                <p>University of Jember</p>
+                <small>JOSGIS - Jeruk Semboro Data Management System</small>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ 'success' if category == 'success' else 'error' }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Hamburger Menu Functions
+        function toggleMenu() {
+            const hamburgerBtn = document.querySelector('.hamburger-btn');
+            const sideMenu = document.getElementById('sideMenu');
+            const menuOverlay = document.getElementById('menuOverlay');
+
+            hamburgerBtn.classList.toggle('active');
+            sideMenu.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        }
+
+        function closeMenu() {
+            const hamburgerBtn = document.querySelector('.hamburger-btn');
+            const sideMenu = document.getElementById('sideMenu');
+            const menuOverlay = document.getElementById('menuOverlay');
+
+            hamburgerBtn.classList.remove('active');
+            sideMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        }
+
+        // Profile Modal Functionality
+        function showProfile() {
+            closeMenu();
+
+            // Create modal if it doesn't exist
+            let modal = document.getElementById('profileModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'profileModal';
+                modal.innerHTML = `
+                    <div class="modal-overlay" onclick="closeProfile()">
+                        <div class="modal-content" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <h3>👤 Farmer Profile</h3>
+                                <button class="close-btn" onclick="closeProfile()">&times;</button>
+                            </div>
+                            <div class="modal-body" id="profileContent">
+                                <div class="loading">Loading profile data...</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            modal.style.display = 'flex';
+
+            // Load profile data
+            fetch('/api/profile-data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('profileContent').innerHTML = '<div class="error">Error: ' + data.error + '</div>';
+                        return;
+                    }
+
+                    document.getElementById('profileContent').innerHTML = `
+                         <div class="profile-info">
+                             <div class="profile-field">
+                                <label>Farmer Name:</label>
+                                <span>${data.nama_petani || '-'}</span>
+                             </div>
+                             <div class="profile-field">
+                                <label>Email:</label>
+                                <span>${data.email_petani || '-'}</span>
+                             </div>
+                             <div class="profile-field">
+                                <label>National ID (NIK):</label>
+                                <span>${data.nik || '-'}</span>
+                             </div>
+                             <div class="profile-field">
+                                <label>Phone Number:</label>
+                                <span>${data.no_telepon || '-'}</span>
+                             </div>
+                             <div class="profile-field">
+                                <label>Gender:</label>
+                                <span>${data.gender || '-'}</span>
+                             </div>
+                             <div class="profile-field" style="grid-column: 1 / -1;">
+                                <label>Address:</label>
+                                <span>${data.alamat_petani || '-'}</span>
+                             </div>
+                         </div>
+                         <div style="margin-top: 2rem;">
+                            <label style="font-weight: 600; color: var(--primary-orange); margin-bottom: 1rem; display: block;">📍 Home Location:</label>
+                             <div id="profileMap"></div>
+                         </div>
+                     `;
+
+                    // Initialize map
+                    setTimeout(() => {
+                        initProfileMap(data.titik_rumah);
+                    }, 100);
+                })
+                .catch(error => {
+                    document.getElementById('profileContent').innerHTML = '<div class="error">Failed to load profile data</div>';
+                });
+        }
+
+        function closeProfile() {
+            const modal = document.getElementById('profileModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function initProfileMap(titikRumah) {
+            if (typeof L === 'undefined') {
+                // Load Leaflet if not already loaded
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                document.head.appendChild(link);
+
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.onload = () => initProfileMapWithLeaflet(titikRumah);
+                document.head.appendChild(script);
+            } else {
+                initProfileMapWithLeaflet(titikRumah);
+            }
+        }
+
+        function initProfileMapWithLeaflet(titikRumah) {
+            const profileMap = L.map('profileMap').setView([-8.2981, 114.1323], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(profileMap);
+
+            if (titikRumah) {
+                try {
+                    const titik = JSON.parse(titikRumah);
+                    if (titik && titik.type === 'Point') {
+                        const [lng, lat] = titik.coordinates;
+                        const rumahMarker = L.marker([lat, lng], {
+                            icon: L.icon({
+                                iconUrl: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
+                                iconSize: [30, 30]
+                            })
+                        }).addTo(profileMap).bindPopup("Home Location");
+                        profileMap.setView([lat, lng], 15);
+                    }
+                } catch (e) {
+                    console.error('Error parsing location data:', e);
+                }
+            }
+
+            setTimeout(() => {
+                profileMap.invalidateSize();
+            }, 100);
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,42 @@
+{% extends 'base_login.html' %}
+<!-- Updated title from Kakao to JOSGIS Jeruk Semboro -->
+{% block title %}JOSGIS Login - Jeruk Semboro Geographic Information System{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 500px; margin: 2rem auto;">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <img src="{{ url_for('static', filename='uploads/logo_unej.png') }}" alt="Logo UNEJ" style="width: 80px; height: 80px; margin-bottom: 1rem;">
+    <h2 style="color: var(--primary-orange); margin-bottom: 0.5rem;">JOSGIS Login</h2>
+    <p style="color: #666;">Sign in to the Jeruk Semboro Geographic Information System</p>
+  </div>
+
+  <form method="POST">
+    <div class="form-group">
+      <label for="email">📧 Email</label>
+      <input type="email" id="email" name="email" placeholder="example@example.com" required>
+    </div>
+
+    <div class="form-group">
+      <label for="password">🔒 Password</label>
+      <input type="password" id="password" name="password" placeholder="********" required>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary" style="width: 100%;">🚀 Login</button>
+    </div>
+  </form>
+
+  <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #ccc;">
+  <div style="text-align: center;">
+      <a href="{{ url_for('auth.login_google') }}" class="btn" style="background-color: #4285F4; color: white; display: inline-flex; align-items: center; padding: 0.75rem 1.5rem; border-radius: 5px; text-decoration: none; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+          <img src="{{ url_for('static', filename='uploads/google-logo.png') }}" alt="Google Logo" style="width: 20px; height: 20px; margin-right: 1rem;">
+          Sign in with Google
+      </a>
+  </div>
+
+  <p style="text-align:center; margin-top: 1.5rem; color: #666;">
+    Don't have an account?
+    <a href="{{ url_for('auth.register') }}" style="color: var(--primary-orange); font-weight: 600;">Register now</a>
+  </p>
+</div>
+{% endblock %}

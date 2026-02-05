@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Field Issues{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>⚠️ Issues at Field {{ lahan_id }}</h2>
+  <p>Record and manage issues occurring in the field</p>
+</div>
+
+<div class="btn-group" style="margin-bottom: 2rem;">
+  <a href="{{ url_for('lahan.detail_lahan', id_lahan=lahan_id) }}" class="btn btn-secondary">← Back to Field Details</a>
+</div>
+
+<div class="form-container">
+  <form method="POST" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>📅 Date:</label>
+        <input type="date" name="tanggal" required>
+      </div>
+
+      <div class="form-group full-width">
+        <label>📝 Issue Description:</label>
+        <textarea name="deskripsi" rows="4" placeholder="Describe the issue occurring in the field..."></textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label>🛠️ Handling Actions:</label>
+        <textarea name="tindakan_penanganan" rows="4" placeholder="Describe actions taken or planned..."></textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label>📋 Additional Notes:</label>
+        <textarea name="catatan_tambahan" rows="3" placeholder="Additional notes or observations..."></textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label>📸 Field Photo:</label>
+        <input type="file" name="foto_lapangan" accept="image/*">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">💾 Save Issue</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>📋 Issue History</h3>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Actions</th>
+          <th>Notes</th>
+          <th>Photo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in data_permasalahan %}
+        <tr>
+          <td>{{ p.id_permasalahan_lapang }}</td>
+          <td>{{ p.tanggal.strftime('%d/%m/%Y') if p.tanggal else '' }}</td>
+          <td>{{ p.deskripsi }}</td>
+          <td>{{ p.tindakan_penanganan }}</td>
+          <td>{{ p.catatan_tambahan }}</td>
+          <td>
+            {% if p.foto_lapangan %}
+              <img src="{{ url_for('static', filename='uploads/' ~ p.foto_lapangan) }}" style="width: 100px; height: 60px; object-fit: cover; border-radius: 6px;">
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align: center;">No issues recorded yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

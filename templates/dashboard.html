@@ -1,0 +1,705 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Citrus Plantation Data System{% endblock %}
+
+{% block content %}
+    <div class="section-header">
+      <h2>Welcome, {{ nama }}!</h2>
+      <p>Citrus Plantation Data System Dashboard</p>
+    </div>
+
+    <!-- Add charts section -->
+    <div class="section-header">
+      <h2>📊 Plantation Data Analysis</h2>
+    </div>
+
+    <!-- Added farm selector for filtering chart data -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div class="form-group">
+        <label for="farmSelector">🌿 Select Land for Analysis:</label>
+        <select id="farmSelector" class="form-control" onchange="updateCharts()">
+          <option value="">All Land</option>
+        </select>
+      </div>
+      <div id="selectedFarmInfo" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; display: none;">
+        <h4 id="selectedFarmName" style="color: var(--primary-green); margin-bottom: 0.5rem;"></h4>
+        <div id="selectedFarmDetails" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.9rem;"></div>
+      </div>
+    </div>
+
+    <div class="charts-container">
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3>📈 Monthly Productivity (kg/tree)</h3>
+          <canvas id="productivityChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>🌧️ Monthly Rainfall (mm)</h3>
+          <canvas id="rainfallChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3>🌿 Plant Health Status</h3>
+          <canvas id="healthChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>🐛 Pest Infestation Level</h3>
+          <canvas id="pestChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3>🔧 Maintenance Activities</h3>
+          <canvas id="maintenanceChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>🌱 Citrus Variety Distribution</h3>
+          <canvas id="varietyChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗺️ Your Land Map</h3>
+      <div id="map"></div>
+    </div>
+
+    <div class="card">
+      <h3>📊 Your Land List</h3>
+      {% if lahan %}
+        <ul class="lahan-list">
+          {% for item in lahan %}
+            <li class="lahan-item">
+              <h4>🌿 {{ item.nama_lahan }}</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>📏 Land Area:</label>
+                  <span>{{ item.luas_lahan }} ha</span>
+                </div>
+                <div class="form-group">
+                  <label>📅 Planting Year:</label>
+                  <span>{{ item.tahun_tanam }}</span>
+                </div>
+                <div class="form-group">
+                  <label>🌱 Citrus Variety:</label>
+                  <span>{{ item.varietas_kakao }}</span>
+                </div>
+              </div>
+
+              {% if item.bukti_luas_sertifikat %}
+                <p style="margin: 1rem 0;">
+                  <a href="{{ url_for('static', filename=item.bukti_luas_sertifikat.split('static/')[-1]) }}" target="_blank" style="color: var(--cocoa-brown); font-weight: 600;">
+                    📄 View Certificate
+                  </a>
+                </p>
+              {% endif %}
+
+              <div class="lahan-actions">
+                <button class="btn btn-secondary" onclick='showOnMap({{ item.geojson|safe }}, "{{ item.nama_lahan }}")'>
+                  📍 Show on Map
+                </button>
+                <a href="{{ url_for('lahan.detail_lahan', id_lahan=item.id_lahan) }}" class="btn btn-primary">
+                  📄 Land Details
+                </a>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div style="text-align: center; padding: 3rem; color: #666;">
+          <h4>🌱 No Land Added Yet</h4>
+          <p>Please add a plot first to start recording your citrus plantation data.</p>
+          <a href="{{ url_for('lahan.tambah_lahan') }}" class="btn btn-primary" style="margin-top: 1rem;">
+            ➕ Add First Land
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="section-header">
+      <h2>📈 Latest Data History</h2>
+    </div>
+
+    <div class="card">
+      <h3>🔍 Latest Monitoring History</h3>
+      {% if monitoring %}
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>No</th><th>Land Name</th><th>Monitoring Date</th>
+                <th>Dead Trees Count</th><th>Pest Type</th>
+                <th>Productivity (kg/tree)</th><th>Height (cm)</th>
+                <th>Yellowing Leaves</th><th>Stem Damage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for data, nama_lahan in monitoring %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ nama_lahan }}</td>
+                <td>{{ data.tanggal_monitoring.strftime('%d-%m-%Y') }}</td>
+                <td>{{ data.jumlah_pohon_mati }}</td>
+                <td>{{ data.jenis_hama or '-' }}</td>
+                <td>{{ data.produktivitas or '-' }}</td>
+                <td>{{ data.tinggi_tanaman or '-' }}</td>
+                <td>{{ 'Yes' if data.daun_menguning else 'No' }}</td>
+                <td>{{ data.kerusakan_batang or '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p style="text-align: center; padding: 2rem; color: #666;">No monitoring data found.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>🌿 Latest Maintenance History</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+              <tr>
+                  <th>Land Name</th>
+                  <th>Application Date</th>
+                  <th>Citrus Pruning</th>
+                  <th>Shade Tree Pruning</th>
+                  <th>Weeding</th>
+                  <th>Fertilization</th>
+                  <th>Fertilizer Type</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% if pemeliharaan %}
+                  {% for data, nama_lahan in pemeliharaan %}
+                      <tr>
+                          <td>{{ nama_lahan }}</td>
+                          <td>{{ data.tanggal_aplikasi.strftime('%Y-%m-%d') if data.tanggal_aplikasi else '-' }}</td>
+                          <td>{{ 'Yes' if data.pemangkasan_kakao else 'No' }}</td>
+                          <td>{{ 'Yes' if data.pemangkasan_penaung else 'No' }}</td>
+                          <td>{{ 'Yes' if data.penyiangan_gulma else 'No' }}</td>
+                          <td>{{ 'Yes' if data.pemupukan else 'No' }}</td>
+                          <td>{{ data.jenis_pupuk or '-' }}</td>
+                      </tr>
+                  {% endfor %}
+              {% else %}
+                  <tr>
+                      <td colspan="7" style="text-align: center;">No maintenance history yet</td>
+                  </tr>
+              {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🐛 Latest Pest and Disease History</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Land Name</th>
+              <th>Date</th>
+              <th>Pest Type</th>
+              <th>Infestation Level</th>
+              <th>Affected Area (ha)</th>
+              <th>Control Conducted</th>
+              <th>Pest Control Type</th>
+              <th>Pest Control Description</th>
+              <th>Disease Control Type</th>
+              <th>Disease Control Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if hama %}
+              {% for data, nama_lahan in hama %}
+                <tr>
+                  <td>{{ nama_lahan }}</td>
+                  <td>{{ data.tanggal.strftime('%d-%m-%Y') if data.tanggal else '-' }}</td>
+                  <td>{{ data.jenis_hama or '-' }}</td>
+                  <td>{{ data.tingkat_serangan_hama or '-' }}</td>
+                  <td>{{ '{:.2f}'.format(data.luas_terdampak) if data.luas_terdampak else '-' }}</td>
+                  <td>{{ 'Yes' if data.pengendalian_dilakukan else 'No' }}</td>
+                  <td>{{ data.jenis_pengendalian_hama or '-' }}</td>
+                  <td>{{ data.keterangan_pengendalian_hama or '-' }}</td>
+                  <td>{{ data.jenis_pengendalian_penyakit or '-' }}</td>
+                  <td>{{ data.keterangan_pengendalian_penyakit or '-' }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="10" style="text-align: center;">No pest and disease data yet</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🌤️ Latest Environment & Weather History</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Land Name</th>
+              <th>Date</th>
+              <th>Rainfall (mm)</th>
+              <th>Drainage</th>
+              <th>Shade</th>
+              <th>Environment Photo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if lingkungan %}
+              {% for data, nama_lahan in lingkungan %}
+                <tr>
+                  <td>{{ nama_lahan }}</td>
+                  <td>{{ data.tanggal.strftime('%d-%m-%Y') if data.tanggal else '-' }}</td>
+                  <td>{{ '{:.1f}'.format(data.curah_hujan) if data.curah_hujan else '-' }}</td>
+                  <td>{{ data.drainase or '-' }}</td>
+                  <td>{{ data.naungan or '-' }}</td>
+                  <td>
+                    {% if data.foto_lingkungan %}
+                      <a href="{{ url_for('static',filename='/uploads/lingkungan/'+data.foto_lingkungan)}}" target="_blank">View Photo</a>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" style="text-align: center;">No environment & weather data yet</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>⚠️ Latest Field Problems History</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Land Name</th>
+              <th>Date</th>
+              <th>Problem Description</th>
+              <th>Handling Action</th>
+              <th>Additional Notes</th>
+              <th>Field Photo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if permasalahan %}
+              {% for data, nama_lahan in permasalahan %}
+                <tr>
+                  <td>{{ nama_lahan }}</td>
+                  <td>{{ data.tanggal.strftime('%d-%m-%Y') if data.tanggal else '-' }}</td>
+                  <td>{{ data.deskripsi or '-' }}</td>
+                  <td>{{ data.tindakan_penanganan or '-' }}</td>
+                  <td>{{ data.catatan_tambahan or '-' }}</td>
+                  <td>
+                    {% if data.foto_lapangan %}
+                      <a href="{{ url_for('static',filename='/uploads/permasalahan/'+data.foto_lapangan) }}" target="_blank">View Photo</a>
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" style="text-align: center;">No field problem data yet</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+/* Add chart styling */
+.charts-container {
+    margin-bottom: 2rem;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-left: 4px solid var(--secondary-green);
+}
+
+.chart-card h3 {
+    color: var(--primary-green);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.chart-card canvas {
+    max-height: 300px;
+}
+
+@media (max-width: 768px) {
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let chartInstances = {};
+    let farmData = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize charts
+        initializeCharts();
+
+        // Initialize map
+        initializeMap();
+    });
+
+    function initializeCharts() {
+        fetch('/api/chart-data')
+            .then(response => response.json())
+            .then(data => {
+                farmData = data.farm_info || [];
+                populateFarmSelector();
+
+                createProductivityChart(data.productivity);
+                createRainfallChart(data.rainfall);
+                createHealthChart(data.health);
+                createPestChart(data.pest);
+                createMaintenanceChart(data.maintenance);
+                createVarietyChart(data.variety);
+
+                updateSelectedFarmInfo(data.selected_farm);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+            });
+    }
+
+    function populateFarmSelector() {
+        const selector = document.getElementById('farmSelector');
+        selector.innerHTML = '<option value="">All Land</option>';
+
+        farmData.forEach(farm => {
+            const option = document.createElement('option');
+            option.value = farm.id_lahan;
+            option.textContent = `${farm.nama_lahan} (${farm.luas_lahan} ha - ${farm.varietas_kakao})`;
+            selector.appendChild(option);
+        });
+    }
+
+    function updateCharts() {
+        const selectedFarmId = document.getElementById('farmSelector').value;
+        const url = selectedFarmId ? `/api/chart-data?farm_id=${selectedFarmId}` : '/api/chart-data';
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Destroy existing charts
+                Object.values(chartInstances).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                chartInstances = {};
+
+                // Create new charts with filtered data
+                createProductivityChart(data.productivity);
+                createRainfallChart(data.rainfall);
+                createHealthChart(data.health);
+                createPestChart(data.pest);
+                createMaintenanceChart(data.maintenance);
+                createVarietyChart(data.variety);
+
+                updateSelectedFarmInfo(data.selected_farm);
+            })
+            .catch(error => {
+                console.error('Error updating chart data:', error);
+            });
+    }
+
+    function updateSelectedFarmInfo(selectedFarm) {
+        const infoDiv = document.getElementById('selectedFarmInfo');
+        const nameDiv = document.getElementById('selectedFarmName');
+        const detailsDiv = document.getElementById('selectedFarmDetails');
+
+        if (selectedFarm && selectedFarm.id_lahan) {
+            const farm = farmData.find(f => f.id_lahan === selectedFarm.id_lahan);
+            if (farm) {
+                nameDiv.textContent = `🌿 ${farm.nama_lahan}`;
+                detailsDiv.innerHTML = `
+                    <div><strong>📏 Area:</strong> ${farm.luas_lahan} ha</div>
+                    <div><strong>🌱 Variety:</strong> ${farm.varietas_kakao}</div>
+                    <div><strong>📅 Planting Year:</strong> ${farm.tahun_tanam || 'Unknown'}</div>
+                `;
+                infoDiv.style.display = 'block';
+            }
+        } else {
+            nameDiv.textContent = '🌿 All Land';
+            detailsDiv.innerHTML = `<div><strong>📊 Displaying combined data from ${farmData.length} plots</strong></div>`;
+            infoDiv.style.display = 'block';
+        }
+    }
+
+    function createProductivityChart(data) {
+        const ctx = document.getElementById('productivityChart').getContext('2d');
+        chartInstances.productivity = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(item => {
+                    const date = new Date(item.month + '-01');
+                    return date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Productivity (kg/tree)',
+                    data: data.map(item => item.value),
+                    borderColor: '#2d5016',
+                    backgroundColor: 'rgba(45, 80, 22, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function createRainfallChart(data) {
+        const ctx = document.getElementById('rainfallChart').getContext('2d');
+        chartInstances.rainfall = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(item => {
+                    const date = new Date(item.month + '-01');
+                    return date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                }),
+                datasets: [{
+                    label: 'Rainfall (mm)',
+                    data: data.map(item => item.value),
+                    backgroundColor: '#4a7c59',
+                    borderColor: '#2d5016',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function createHealthChart(data) {
+        const ctx = document.getElementById('healthChart').getContext('2d');
+        chartInstances.health = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Healthy', 'Yellowing Leaves', 'Stem Damage', 'Dead Trees'],
+                datasets: [{
+                    data: [data.sehat, data.daun_menguning, data.kerusakan_batang, data.pohon_mati],
+                    backgroundColor: ['#8fbc8f', '#ffd700', '#d2691e', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    function createPestChart(data) {
+        const ctx = document.getElementById('pestChart').getContext('2d');
+        chartInstances.pest = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: data.map(item => item.level || 'Unknown'),
+                datasets: [{
+                    data: data.map(item => item.count),
+                    backgroundColor: ['#8fbc8f', '#ffd700', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    function createMaintenanceChart(data) {
+        const ctx = document.getElementById('maintenanceChart').getContext('2d');
+        chartInstances.maintenance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Pruning', 'Fertilization', 'Weeding'],
+                datasets: [{
+                    label: 'Activity Count',
+                    data: [data.pemangkasan, data.pemupukan, data.penyiangan],
+                    backgroundColor: ['#2d5016', '#4a7c59', '#8fbc8f'],
+                    borderColor: ['#1a2f0c', '#2d5016', '#4a7c59'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function createVarietyChart(data) {
+        const ctx = document.getElementById('varietyChart').getContext('2d');
+        chartInstances.variety = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.map(item => item.variety || 'Unknown'),
+                datasets: [{
+                    data: data.map(item => item.area),
+                    backgroundColor: ['#2d5016', '#4a7c59', '#8fbc8f', '#d2691e', '#8b4513'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    function initializeMap() {
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+        });
+
+        window.map = L.map('map').setView([-8.2981, 114.1323], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(window.map);
+
+        if ({{ petani.titik_rumah|safe }}) {
+            const titik = {{ petani.titik_rumah|safe }};
+            if (titik && titik.type === 'Point') {
+                const [lng, lat] = titik.coordinates;
+                const rumahMarker = L.marker([lat, lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://cdn-icons-png.flaticon.com/512/25/25694.png',
+                        iconSize: [30, 30]
+                    })
+                }).addTo(window.map).bindPopup("Farmer's Home Point");
+            }
+        }
+
+        setTimeout(() => {
+            window.map.invalidateSize();
+        }, 200);
+
+        let currentLayer = null;
+
+        window.showOnMap = function (geojson, namaLahan) {
+            if (!geojson) {
+                alert("GeoJSON data not available.");
+                return;
+            }
+
+            if (currentLayer) {
+                window.map.removeLayer(currentLayer);
+            }
+
+            if (geojson.type === 'Point') {
+                const [lng, lat] = geojson.coordinates;
+                currentLayer = L.marker([lat, lng]).addTo(window.map)
+                    .bindPopup(namaLahan).openPopup();
+                window.map.setView([lat, lng], 15);
+            } else if (geojson.type === 'Polygon') {
+                const latlngs = geojson.coordinates[0].map(coord => [coord[1], coord[0]]);
+                currentLayer = L.polygon(latlngs, {
+                    color: '#2d5016',
+                    weight: 3,
+                    fillOpacity: 0.4,
+                    fillColor: '#8fbc8f'
+                }).addTo(window.map).bindPopup(namaLahan).openPopup();
+                window.map.fitBounds(currentLayer.getBounds());
+            } else {
+                alert("Geometry type not recognized.");
+            }
+        };
+    }
+</script>
+{% endblock %}

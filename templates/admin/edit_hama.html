@@ -1,0 +1,83 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Edit Pest & Disease Data{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary" style="margin-bottom: 20px;">
+        &laquo; Back to Farmer Details
+    </a>
+
+    <h2>Edit Pest & Disease Data</h2>
+
+    <div class="card">
+        <h3>Edit Pest & Disease - {{ data.lahan.nama_lahan }}</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label for="tanggal">Attack Date:</label>
+                <input type="date" id="tanggal" name="tanggal" class="form-control" value="{{ data.tanggal.strftime('%Y-%m-%d') if data.tanggal else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="jenis_hama">Pest Type:</label>
+                <input type="text" id="jenis_hama" name="jenis_hama" class="form-control" value="{{ data.jenis_hama or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="tingkat_serangan_hama">Attack Level:</label>
+                <select id="tingkat_serangan_hama" name="tingkat_serangan_hama" class="form-control">
+                    <option value="">Select Attack Level</option>
+                    <option value="rendah" {{ 'selected' if data.tingkat_serangan_hama == 'rendah' }}>Low</option>
+                    <option value="sedang" {{ 'selected' if data.tingkat_serangan_hama == 'sedang' }}>Medium</option>
+                    <option value="tinggi" {{ 'selected' if data.tingkat_serangan_hama == 'tinggi' }}>High</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="luas_terdampak">Affected Area (ha):</label>
+                <input type="number" step="0.01" id="luas_terdampak" name="luas_terdampak" class="form-control" value="{{ data.luas_terdampak or '' }}">
+            </div>
+
+            <div class="form-group form-check">
+                <input type="checkbox" id="pengendalian_dilakukan" name="pengendalian_dilakukan" class="form-check-input" {% if data.pengendalian_dilakukan %}checked{% endif %}>
+                <label class="form-check-label" for="pengendalian_dilakukan">Control Performed</label>
+            </div>
+
+            <div class="form-group">
+                <label for="jenis_pengendalian_hama">Type of Pest Control:</label>
+                <select id="jenis_pengendalian_hama" name="jenis_pengendalian_hama" class="form-control">
+                    <option value="">Select Control Type</option>
+                    <option value="mekanis" {{ 'selected' if data.jenis_pengendalian_hama == 'mekanis' }}>Mechanical</option>
+                    <option value="kimia" {{ 'selected' if data.jenis_pengendalian_hama == 'kimia' }}>Chemical</option>
+                    <option value="hayati" {{ 'selected' if data.jenis_pengendalian_hama == 'hayati' }}>Biological</option>
+                    <option value="lainnya" {{ 'selected' if data.jenis_pengendalian_hama == 'lainnya' }}>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="keterangan_pengendalian_hama">Notes on Pest Control:</label>
+                <textarea id="keterangan_pengendalian_hama" name="keterangan_pengendalian_hama" class="form-control" rows="2">{{ data.keterangan_pengendalian_hama or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="jenis_pengendalian_penyakit">Type of Disease Control:</label>
+                <select id="jenis_pengendalian_penyakit" name="jenis_pengendalian_penyakit" class="form-control">
+                    <option value="">Select Control Type</option>
+                    <option value="mekanis" {{ 'selected' if data.jenis_pengendalian_penyakit == 'mekanis' }}>Mechanical</option>
+                    <option value="kimia" {{ 'selected' if data.jenis_pengendalian_penyakit == 'kimia' }}>Chemical</option>
+                    <option value="hayati" {{ 'selected' if data.jenis_pengendalian_penyakit == 'hayati' }}>Biological</option>
+                    <option value="lainnya" {{ 'selected' if data.jenis_pengendalian_penyakit == 'lainnya' }}>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="keterangan_pengendalian_penyakit">Notes on Disease Control:</label>
+                <textarea id="keterangan_pengendalian_penyakit" name="keterangan_pengendalian_penyakit" class="form-control" rows="2">{{ data.keterangan_pengendalian_penyakit or '' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

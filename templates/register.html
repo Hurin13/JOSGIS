@@ -1,0 +1,114 @@
+{% extends 'base_login.html' %}
+<!-- Updated title from Kakao to JOSGIS Jeruk Semboro -->
+{% block title %}Register JOSGIS - Jeruk Semboro Geographic Information System{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <img src="{{ url_for('static', filename='uploads/logo_unej.png') }}" alt="Logo UNEJ" style="width: 80px; height: 80px; margin-bottom: 1rem;">
+    <!-- Updated heading color to orange and text -->
+    <h2 style="color: var(--primary-orange); margin-bottom: 0.5rem;">Jeruk Semboro Registration Form</h2>
+    <p style="color: #666;">Register as a JOSGIS user</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('auth.register') }}">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>🆔 NIK</label>
+        <input type="text" name="nik" placeholder="16-digit NIK" required pattern="\d{16}" title="Enter 16-digit NIK">
+      </div>
+
+      <div class="form-group">
+        <label>👤 Farmer Name</label>
+        <input type="text" name="nama" placeholder="Full name" required>
+      </div>
+
+      <div class="form-group">
+        <label>⚧ Gender</label>
+        <select name="gender" required>
+          <option value="">Select Gender</option>
+          <option value="Laki-laki">Male</option>
+          <option value="Perempuan">Female</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>📱 Phone Number</label>
+        <input type="text" name="no_hp" placeholder="08xxxxxxxxxx" required>
+      </div>
+
+      <div class="form-group">
+        <label>📧 Email</label>
+        <input type="email" name="email" placeholder="email@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label>🔒 Password</label>
+        <input type="password" name="password" placeholder="Minimum 6 characters" required>
+      </div>
+
+      <div class="form-group">
+        <label>📍 Latitude</label>
+        <input type="text" id="titik_lat" name="titik_lat" placeholder="Click the map to fill" readonly required>
+      </div>
+
+      <div class="form-group">
+        <label>📍 Longitude</label>
+        <input type="text" id="titik_lng" name="titik_lng" placeholder="Click the map to fill" readonly required>
+      </div>
+
+      <div class="form-group full-width">
+        <label>🏠 Address</label>
+        <textarea name="alamat" id="alamat" rows="3" placeholder="Address will be auto-filled from the map, you can edit if needed" required></textarea>
+        <small style="color: #666; font-size: 0.9rem;">Address is auto-populated from the map; you can edit it if necessary.</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗺️ Select Your Home Location</h3>
+      <p style="color: #666; margin-bottom: 1rem;">Click on the map to set your home location</p>
+      <div id="map"></div>
+    </div>
+
+    <div class="btn-group">
+      <button type="submit" class="btn btn-primary">📝 Register Now</button>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">← Back to Login</a>
+    </div>
+  </form>
+</div>
+
+<!-- LeafletJS CDN -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    var map = L.map('map').setView([-8.2981, 114.1323], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker;
+
+    map.on('click', function (e) {
+        var lat = e.latlng.lat.toFixed(6);
+        var lng = e.latlng.lng.toFixed(6);
+
+        document.getElementById('titik_lat').value = lat;
+        document.getElementById('titik_lng').value = lng;
+
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lng]).addTo(map);
+
+        // Send to server for reverse geocoding
+        fetch("{{ url_for('auth.get_address_from_coords') }}", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat: lat, lon: lng })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('alamat').value = data.alamat;
+        });
+    });
+</script>
+{% endblock %}

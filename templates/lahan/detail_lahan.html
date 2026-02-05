@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Farm Details{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2>📄 Farm Details: {{ lahan.nama_lahan }}</h2>
+  <p>Complete information and farm map for the orange plantation</p>
+</div>
+
+<div class="card">
+  <h3>🗺️ Farm Map</h3>
+  <div id="map"></div>
+</div>
+
+<div class="btn-group" style="margin: 2rem 0;">
+  <a href="{{ url_for('lahan.kelola_lahan') }}" class="btn btn-secondary">
+    ← Back to Manage Farms
+  </a>
+
+  <a href="{{ url_for('monitoring.tampil_monitoring', id_lahan=lahan.id_lahan) }}" class="btn btn-primary">
+    🔍 Monitoring
+  </a>
+
+  <a href="{{ url_for('pemeliharaan.pemeliharaan_lahan', id_lahan=lahan.id_lahan) }}" class="btn btn-primary">
+    🌿 Maintenance
+  </a>
+
+  <a href="{{ url_for('hama.tampil_hama', id_lahan=lahan.id_lahan) }}" class="btn btn-primary">
+    🐛 Pests & Diseases
+  </a>
+
+  <a href="{{ url_for('lingkungan.tambah_lingkungan', id_lahan=lahan.id_lahan) }}" class="btn btn-primary">
+    🌤️ Environment & Weather
+  </a>
+
+  <a href="{{ url_for('permasalahan.permasalahan_lahan', id_lahan=lahan.id_lahan) }}" class="btn btn-primary">
+    ⚠️ Problems
+  </a>
+</div>
+
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    var map = L.map('map').setView([-8.2981, 114.1323], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    {% if lahan.geojson %}
+        var geojson = {{ lahan.geojson | safe }};
+        var lahanLayer = L.geoJSON(geojson, {
+            style: {
+                color: '#2d5016',
+                weight: 3,
+                fillOpacity: 0.5,
+                fillColor: '#8fbc8f'
+            }
+        }).addTo(map);
+        map.fitBounds(lahanLayer.getBounds());
+    {% else %}
+        alert("Geometry data not found.");
+    {% endif %}
+</script>
+{% endblock %}

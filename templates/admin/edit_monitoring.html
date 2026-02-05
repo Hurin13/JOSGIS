@@ -1,0 +1,63 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Edit Monitoring Data{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary" style="margin-bottom: 20px;">
+        &laquo; Back to Farmer Details
+    </a>
+
+    <h2>Edit Monitoring Data</h2>
+
+    <div class="card">
+        <h3>Edit Monitoring - {{ data.lahan.nama_lahan }}</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label for="tanggal_monitoring">Monitoring Date:</label>
+                <input type="date" id="tanggal_monitoring" name="tanggal_monitoring" class="form-control" value="{{ data.tanggal_monitoring.strftime('%Y-%m-%d') if data.tanggal_monitoring else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="jumlah_pohon_mati">Number of Dead Trees:</label>
+                <input type="number" id="jumlah_pohon_mati" name="jumlah_pohon_mati" class="form-control" value="{{ data.jumlah_pohon_mati or 0 }}">
+            </div>
+
+            <div class="form-group">
+                <label for="jenis_hama">Pest Type:</label>
+                <input type="text" id="jenis_hama" name="jenis_hama" class="form-control" value="{{ data.jenis_hama or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="produktivitas">Productivity (kg/tree):</label>
+                <input type="number" step="0.01" id="produktivitas" name="produktivitas" class="form-control" value="{{ data.produktivitas or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="tinggi_tanaman">Plant Height (m):</label>
+                <input type="number" step="0.01" id="tinggi_tanaman" name="tinggi_tanaman" class="form-control" value="{{ data.tinggi_tanaman or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="daun_menguning">Yellowing Leaves:</label>
+                <input type="checkbox" id="daun_menguning" name="daun_menguning" value="true" class="form-check-input" {% if data.daun_menguning %}checked{% endif %}>
+            </div>
+
+            <div class="form-group">
+                <label for="kerusakan_batang">Stem Damage:</label>
+                <select id="kerusakan_batang" name="kerusakan_batang" class="form-control">
+                    <option value="" {% if not data.kerusakan_batang %}selected{% endif %}>-- Select --</option>
+                    <option value="Ringan" {% if data.kerusakan_batang == 'Ringan' %}selected{% endif %}>Mild</option>
+                    <option value="Sedang" {% if data.kerusakan_batang == 'Sedang' %}selected{% endif %}>Moderate</option>
+                    <option value="Parah" {% if data.kerusakan_batang == 'Parah' %}selected{% endif %}>Severe</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('admin.user_detail', user_id=data.lahan.id_pemilik) }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Admin Dashboard</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="admin-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="card" style="margin: 0; padding: 10px;">
+            <h3>Statistics</h3>
+            <p>Total Registered Farmer Users: <strong>{{ total_users }}</strong></p>
+        </div>
+        <a href="{{ url_for('admin.tambah_admin') }}" class="btn btn-primary" style="font-size: 1rem; padding: 10px 20px;">
+            <i class="fas fa-user-plus" style="margin-right: 8px;"></i> Add New Admin
+        </a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Farmer Name</th>
+                    <th>Address</th>
+                    <th>Phone Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id_pemilik }}</td>
+                    <td>{{ user.nama_petani }}</td>
+                    <td>{{ user.alamat_petani }}</td>
+                    <td>{{ user.no_telepon }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.user_detail', user_id=user.id_pemilik) }}" class="btn btn-primary">View Details</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No registered farmer users.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="text-align: right; margin-top: 2rem;">
+        <a href="{{ url_for('admin.logout') }}" class="btn btn-secondary">Logout</a>
+    </div>
+
+</div>
+{% endblock %}
