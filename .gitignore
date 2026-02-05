@@ -31,3 +31,10 @@ next-env.d.ts
 .venv/
 __pycache__/
 *.pyc
+# =========================
+# disable nextjs for railway
+# =========================
+package.json
+pnpm-lock.yaml
+next.config.mjs
+node_modules/
