@@ -46,14 +46,18 @@ migrate = Migrate(app, db)
 # Ensure these variables exist in your .env file
 google_client_id = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
 google_client_secret = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET")
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-# Create Google OAuth blueprint
-google_bp = make_google_blueprint(
-    client_id=google_client_id,
-    client_secret=google_client_secret,
-    scope=["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
-)
+if google_client_id and google_client_secret:
+    google_bp = make_google_blueprint(
+        client_id=google_client_id,
+        client_secret=google_client_secret,
+        scope=[
+            "openid",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile"
+        ]
+    )
+    app.register_blueprint(google_bp, url_prefix='/google')
 
 # Register application blueprints
 app.register_blueprint(auth_bp, url_prefix='/')
@@ -71,8 +75,8 @@ app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(google_bp, url_prefix='/google')
 
 # Create database tables if they do not exist
-with app.app_context():
-    db.create_all()
+#with app.app_context():
+#    db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
