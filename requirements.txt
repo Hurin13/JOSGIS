@@ -3,6 +3,7 @@ Flask-SQLAlchemy
 Flask-Login
 Flask-Migrate
 Flask-Session
+Flask-Dance
 psycopg2-binary
 python-dotenv
 gunicorn
