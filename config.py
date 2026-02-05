@@ -1,5 +1,6 @@
+import os
+
 class Config:
-    # Replace with a secure random key in production
-    SECRET_KEY = 'your-secret-key'
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:%40Gongyoo13@localhost:5432/web_gis_jambewangi'
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
